@@ -4,12 +4,10 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.flaviofaria.kenburnsview.KenBurnsView;
 import com.github.florent37.carpaccio.Carpaccio;
 import com.github.florent37.carpaccio.controllers.helper.FastBlurHelper;
 import com.github.florent37.carpaccio.controllers.helper.GrayScaleHelper;
@@ -23,7 +21,6 @@ import com.squareup.picasso.Transformation;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ImageViewController {
 
     private static final String TAG = "ImageViewController";
-    public static ConcurrentHashMap<String,Bitmap> PREVIEW_BITMAPS = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<String, Bitmap> PREVIEW_BITMAPS = new ConcurrentHashMap<>();
 
     public boolean ENABLE_PREVIEW = false;
 
@@ -63,16 +60,28 @@ public class ImageViewController {
         list.add(transformation);
     }
 
-    public void enablePreview(ImageView imageView){
+    public void enablePreview(ImageView imageView) {
         ENABLE_PREVIEW = true;
     }
 
-    public void url(final ImageView imageView, String url) {
+    public void previewUrl(final ImageView imageView, String url) {
+        if (Carpaccio.IN_EDIT_MODE && ENABLE_PREVIEW)
+            url(imageView, url);
+    }
 
-        if(Carpaccio.IN_EDIT_MODE && ENABLE_PREVIEW) {
+    public void circle(ImageView imageView) {
+        new CommonViewController().replaceViewithTagToRemove(imageView, "de.hdodenhof.circleimageview.CircleImageView", "circle()");
+    }
+
+    public void setUrl(final ImageView imageView, String url) {
+        url(imageView,url);
+    }
+
+    public void url(final ImageView imageView, String url) {
+        if (Carpaccio.IN_EDIT_MODE && ENABLE_PREVIEW) {
             Bitmap bitmap = PREVIEW_BITMAPS.get(url);
             try {
-                if(bitmap == null){
+                if (bitmap == null) {
                     URL src = new URL(url);
                     HttpURLConnection connection = (HttpURLConnection) src.openConnection();
                     connection.setDoInput(true);
@@ -80,21 +89,29 @@ public class ImageViewController {
                     InputStream input = connection.getInputStream();
                     bitmap = BitmapFactory.decodeStream(input);
 
-                    if(bitmap != null)
-                        PREVIEW_BITMAPS.put(url,bitmap);
+                    if (bitmap != null)
+                        PREVIEW_BITMAPS.put(url, bitmap);
                 }
             } catch (Exception e) {
-                imageView.setImageDrawable(new ColorDrawable(Color.parseColor("#3E3E3E")));
+                if (imageView.getDrawable() == null)
+                    imageView.setImageDrawable(new ColorDrawable(Color.parseColor("#3E3E3E")));
             }
 
-            if(bitmap != null)
+            if (bitmap != null)
                 imageView.setImageBitmap(bitmap);
-        }else {
+        } else {
             RequestCreator requestCreator = Picasso.with(imageView.getContext()).load(url);
             if (transformations.get(imageView) != null) {
                 requestCreator = requestCreator.transform(transformations.get(imageView));
                 transformations.remove(imageView);
             }
+
+            if (imageView.getScaleType() == ImageView.ScaleType.CENTER_CROP)
+                requestCreator = requestCreator.centerCrop().fit();
+
+            if (imageView.getScaleType() == ImageView.ScaleType.CENTER_INSIDE)
+                requestCreator = requestCreator.centerInside().fit();
+
             requestCreator.into(imageView, new Callback() {
                 @Override
                 public void onSuccess() {
@@ -136,7 +153,7 @@ public class ImageViewController {
     }
 
     public void animateMaterial(ImageView imageView, int duration) {
-        if(!imageView.isInEditMode()) {
+        if (!imageView.isInEditMode()) {
             if (imageView.getDrawable() == null) {
                 willAnimateMaterial(imageView, duration);
             } else {
@@ -159,8 +176,7 @@ public class ImageViewController {
     }
 
     public void kenburns(ImageView imageView) {
-        CommonViewController replaceViewController = new CommonViewController();
-        KenBurnsView kenBurnsView = replaceViewController.replaceViewithTagToRemove(imageView, "com.flaviofaria.kenburnsview.KenBurnsView", "kenburns()");
+        new CommonViewController().replaceViewithTagToRemove(imageView, "com.flaviofaria.kenburnsview.KenBurnsView", "kenburns()");
     }
 
     public void blur(final ImageView imageView, final int radiusString) {

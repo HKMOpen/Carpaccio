@@ -12,31 +12,13 @@ import java.util.List;
 /**
  * Created by florentchampigny on 27/07/15.
  */
-public class CarpaccioRecyclerViewAdapter extends RecyclerView.Adapter<CarpaccioRecyclerViewAdapter.Holder> {
-
-    public class Holder extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-        int position;
-        Object mappedObject;
-        OnItemClickListener onItemClickListener;
-
-        public Holder(View itemView) {
-            super(itemView);
-            this.itemView.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            onItemClickListener.onItemClick(mappedObject, position, itemView);
-        }
-
-    }
+public class CarpaccioRecyclerViewAdapter<T> extends RecyclerView.Adapter<Holder<T>> {
 
     Carpaccio carpaccio;
     int layoutResId;
     String mappedName;
-    OnItemClickListener onItemClickListener;
-    RecyclerViewCallback recyclerViewCallback;
+    OnItemClickListener<T> onItemClickListener;
+    RecyclerViewCallback<T> recyclerViewCallback;
 
     public CarpaccioRecyclerViewAdapter(Carpaccio carpaccio, int layoutResId, String mappedName) {
         this.carpaccio = carpaccio;
@@ -46,19 +28,19 @@ public class CarpaccioRecyclerViewAdapter extends RecyclerView.Adapter<Carpaccio
         carpaccio.registerAdapter(mappedName, this);
     }
 
-    public OnItemClickListener getOnItemClickListener() {
+    public OnItemClickListener<T> getOnItemClickListener() {
         return onItemClickListener;
     }
 
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
+    public void setOnItemClickListener(OnItemClickListener<T> onItemClickListener) {
         this.onItemClickListener = onItemClickListener;
     }
 
-    public RecyclerViewCallback getRecyclerViewCallback() {
+    public RecyclerViewCallback<T> getRecyclerViewCallback() {
         return recyclerViewCallback;
     }
 
-    public void setRecyclerViewCallback(RecyclerViewCallback recyclerViewCallback) {
+    public void setRecyclerViewCallback(RecyclerViewCallback<T> recyclerViewCallback) {
         this.recyclerViewCallback = recyclerViewCallback;
     }
 
@@ -73,35 +55,65 @@ public class CarpaccioRecyclerViewAdapter extends RecyclerView.Adapter<Carpaccio
     }
 
     @Override
-    public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
+    public Holder<T> onCreateViewHolder(ViewGroup parent, int viewType) {
         View cellView = null;
         if (recyclerViewCallback != null) {
             int layoutId = recyclerViewCallback.onCreateViewHolder(viewType);
-            if(layoutId != -1)
+            if(layoutId > 0)
                 cellView = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
         }
         if(cellView == null)
             cellView = LayoutInflater.from(parent.getContext()).inflate(layoutResId, parent, false);
 
         carpaccio.addChildViews(cellView);
-        return new Holder(cellView);
+
+        if(recyclerViewCallback != null) { //customize holder
+            Holder<T> holder = recyclerViewCallback.onCreateViewHolder(cellView, viewType);
+            if(holder != null)
+                return holder;
+        }
+
+        return new Holder<T>(cellView);
+    }
+
+    public T getItemForRow(View view, int position){
+        if(Carpaccio.IN_EDIT_MODE){
+            return (T)new Object();
+        }
+        return (T)carpaccio.bindView(view, mappedName, position);
     }
 
     @Override
-    public void onBindViewHolder(final Holder holder, final int position) {
-        final Object mappedObject = carpaccio.bindView(holder.itemView, mappedName, position);
+    public void onBindViewHolder(final Holder<T> holder, final int position) {
+        final T mappedObject = getItemForRow(holder.itemView,position);
         holder.onItemClickListener = onItemClickListener;
         holder.position = position;
         holder.mappedObject = mappedObject;
+        holder.onBind(mappedObject);
 
-        if(recyclerViewCallback != null)
-            recyclerViewCallback.onBind(mappedObject,holder.itemView,position);
+        if(recyclerViewCallback != null) {
+            recyclerViewCallback.onBind(mappedObject, holder.itemView, position);
+        }
     }
 
     @Override
     public int getItemCount() {
-        List mappedList = carpaccio.getMappedList(mappedName);
-        if (mappedList == null) return 0;
-        else return mappedList.size();
+        if(Carpaccio.IN_EDIT_MODE){
+            return previewCount;
+        }else {
+            List mappedList = carpaccio.getMappedList(mappedName);
+            if (mappedList == null) return 0;
+            else return mappedList.size();
+        }
+    }
+
+    int previewCount = 10;
+
+    public int getPreviewCount() {
+        return previewCount;
+    }
+
+    public void setPreviewCount(int previewCount) {
+        this.previewCount = previewCount;
     }
 }

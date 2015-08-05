@@ -141,16 +141,23 @@ R.layout.cell_user
     android:gravity="center_vertical"
     android:orientation="horizontal">
 
-    <ImageView
-        android:layout_width="100dp"
-        android:layout_height="match_parent"
-        android:tag="url($user.image);"
-        android:layout_marginRight="20dp" />
+        <ImageView
+            android:layout_width="100dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="20dp"
+            android:tag="
+                enablePreview();
+                previewUrl(http://lorempixel.com/400/400/);
+                url($user.image);
+                " />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:tag="setText($user.name)" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:tag="
+                setText($user.name);
+                setFont(Roboto-Black.ttf);"
+            />
 
 </LinearLayout>
 ```
@@ -165,38 +172,9 @@ carpaccio.mapList("user", this.users);
 
 [![Video](http://share.gifyoutube.com/yAp6Lw.gif)](https://youtu.be/alE3Pewmulo)
 
-------------
+**WORKS WITH ANDROID STUDIO PREVIEW !!!**
 
-#Customize
-
-You can add you own functions to Carpaccio, simply create a custom ViewControllers,
-for example **MyViewController**
-
-```java
-public class MyViewController{
-
-    public void myFunction(View view, String argument1){
-        //your usage
-    }
-
-}
-```
-
-Then you can use it into your layout
-
-```xml
-<com.github.florent37.carpaccio.Carpaccio
-        app:register="
-            com.mypackage.MyViewController
-        ">
-
-        <View
-            android:tag="
-               myFunction(theValueOfMyArgument)
-            "/>
-
-</com.github.florent37.carpaccio.Carpaccio>
-```
+![recycler_preview](https://raw.githubusercontent.com/florent37/Carpaccio/master/screenshot/recycler_preview_small.png)
 
 ------------
 
@@ -214,9 +192,6 @@ TextViewController can set a custom font (from assets/fonts/) to a TextView
 
 ![font](https://raw.githubusercontent.com/florent37/Carpaccio/master/screenshot/custom_font_small.png)
 
-
-Usage : **font(fontName)**
-
 ```xml
 <com.github.florent37.carpaccio.Carpaccio
         app:register="
@@ -230,35 +205,16 @@ Usage : **font(fontName)**
 </com.github.florent37.carpaccio.Carpaccio>
 ```
 
-And provides a data binding setText
-
-Usage : **setText($variable)** or **setText($variable.function())**
+And provides a data binding to set text
 
 ```xml
 <TextView
      android:tag="
          setText($user)
      "/>
-```
 
-Or directly on the android:text
-
-Usage : **android:text="$variable"**
-
-```xml
 <TextView
-     android:text="$user"/>
-```
-
-Fill your TextView with a Lorem Ipsum
-
-Usage : **lorem()**
-
-```xml
-<TextView
-     android:tag="
-              lorem()
-          "/>
+     android:text="$user.getName()"/>
 ```
 
 ------------
@@ -290,25 +246,15 @@ Usage : **url(imageUrl)**
 
 Preview an url image
 
-Usage : **enablePreview();url(imageUrl);**
-
 ```xml
-<com.github.florent37.carpaccio.Carpaccio
-        app:register="
-            com.github.florent37.carpaccio.controllers.ImageViewController;
-        ">
-
-        <ImageView
-             android:tag="
-                enablePreview();
-                 url(http://i.imgur.com/DvpvklR.png);
-             " />
-</com.github.florent37.carpaccio.Carpaccio>
+<ImageView
+     android:tag="
+        enablePreview();
+        url(http://i.imgur.com/DvpvklR.png);
+     " />
 ```
 
 ![url](https://raw.githubusercontent.com/florent37/Carpaccio/master/screenshot/preview_image_url_small.png)
-
-Usage : **kenburns()**
 
 ```xml
 <ImageView
@@ -319,6 +265,16 @@ Usage : **kenburns()**
 ```
 
 [![Video](http://share.gifyoutube.com/vpMYjp.gif)](https://youtu.be/4b84gswKGkA)
+
+```xml
+<ImageView
+      android:tag="
+           circle();
+           url(http://i.imgur.com/DvpvklR.png);
+      " />
+```
+
+![circle](https://raw.githubusercontent.com/florent37/Carpaccio/master/screenshot/circle_small_2.png)
 
 ###Blur
 You can blur an ImageView
@@ -417,88 +373,60 @@ Usage :
 
 [![Video](http://share.gifyoutube.com/mLOpk7.gif)](https://youtu.be/DB_aHUGNwLQ)
 
-------------
+#TODO
 
-##CommonViewController
+- Add binding with ListViews
+- Add confitionnal bindings
 
-Bind a RecyclerView (see DataBinding)
+#Community
 
-Usage :
+Looking for contributors, feel free to fork !
 
-* **adapter(listMappedName,cellLayoutName)**
+Tell me if you're using my library in your application, I'll share it in this README
 
-```xml
-<android.support.v7.widget.RecyclerView
-     android:layout_width="match_parent"
-     android:layout_height="match_parent"
+#Dependencies
 
-     android:tag="
-         adapter(user,R.layout.cell_user)
-     "
-     />
-```
+* [Picasso][picasso] (from Square)
+* [KenBurnsView][kenburnsview] (from flavioarfaria)
+* [Android-Observablescrollview][android-observablescrollview] (from ksoichiro)
 
-Open an activity onClick
+#Credits
 
+Author: Florent Champigny
+www.florentchampigny.com/
 
-* **clickStartActivity(activityName) **
-
-```xml
-<Button
-      android:tag="clickStartActivity(.MainActivitySample)"
-      />
-
-<Button
-      android:tag="clickStartActivity(com.github.florent37.carpaccio.sample.MainActivitySample)"
-      />
-
-<Button
-      android:tag="clickStartActivity($activity1)"
-      />
-```
-
-Replace by another View class
-
-```xml
-<ScrollView
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
-
-      android:tag="
-          replace(com.github.ksoichiro.android.observablescrollview.ObservableScrollView);
-      "
-      />
-```
+<a href="https://plus.google.com/+florentchampigny">
+  <img alt="Follow me on Google+"
+       src="https://raw.githubusercontent.com/florent37/DaVinci/master/mobile/src/main/res/drawable-hdpi/gplus.png" />
+</a>
+<a href="https://twitter.com/florent_champ">
+  <img alt="Follow me on Twitter"
+       src="https://raw.githubusercontent.com/florent37/DaVinci/master/mobile/src/main/res/drawable-hdpi/twitter.png" />
+</a>
+<a href="https://www.linkedin.com/profile/view?id=297860624">
+  <img alt="Follow me on LinkedIn"
+       src="https://raw.githubusercontent.com/florent37/DaVinci/master/mobile/src/main/res/drawable-hdpi/linkedin.png" />
+</a>
 
 
-* **margin(top,right,bottom,left)** & **padding(top,right,bottom,left)**
+License
+--------
 
-```xml
-<View
-      android:layout_width="match_parent"
-      android:layout_height="match_parent"
+    Copyright 2015 florent37, Inc.
 
-      android:tag="
-          margin(0,10,0,0);
-          padding(5,0,5,0);
-      "
-      />
-```
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
 
-------------
+       http://www.apache.org/licenses/LICENSE-2.0
 
-##AnimationViewController
-
-Easings :
-* easeIn : accelerate
-* easeOut : descelerate
-* easeInOut : accelerate then descelerate
-
-Functions :
-* **animateAphaIn(duration,easing)**
-* **animateScaleUp(duration,easing)**
-* **animateEnterY(translationY,duration,easing)**
-* **animateEnterX(translationX,duration,easing)**
-* **animateEnter(translationX,translationY,duration,easing)**
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
 
 
+[picasso]: https://github.com/square/picasso
+[kenburnsview]: https://github.com/flavioarfaria/KenBurnsView
+[android-observablescrollview]: https://github.com/ksoichiro/Android-ObservableScrollView

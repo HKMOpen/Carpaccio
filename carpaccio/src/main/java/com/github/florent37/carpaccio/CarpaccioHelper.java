@@ -9,7 +9,6 @@ import com.github.florent37.carpaccio.model.ObjectAndMethod;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by florentchampigny on 21/07/15.
@@ -31,7 +30,7 @@ public class CarpaccioHelper {
             }
             return objectClass.newInstance();
         } catch (Exception e) {
-            Log.e(TAG, "Cannot construct " + name, e);
+            CarpaccioLogger.e(TAG, "Cannot construct " + name, e);
         }
         return null;
     }
@@ -71,7 +70,7 @@ public class CarpaccioHelper {
             out[0] = parametersType[0].cast(view);
         } catch (ClassCastException e) {
             if (LOG_FAILURES)
-                Log.e(TAG, view.getClass().toString() + " cannot be cast to " + parametersType[0].getClass().toString(), e);
+                CarpaccioLogger.e(TAG, view.getClass().toString() + " cannot be cast to " + parametersType[0].getClass().toString(), e);
             out[0] = view;
         }
 
@@ -86,7 +85,7 @@ public class CarpaccioHelper {
                     out[i + 1] = paramClass.cast(param);
                 } catch (ClassCastException e) {
                     if (LOG_FAILURES)
-                        Log.e(TAG, param.getClass().toString() + " cannot be cast to " + paramClass.toString(), e);
+                        CarpaccioLogger.e(TAG, param.getClass().toString() + " cannot be cast to " + paramClass.toString(), e);
                     out[i + 1] = param;
                 }
             }
@@ -105,7 +104,7 @@ public class CarpaccioHelper {
      * from "myFunction(arg1,arg2)", return ["arg1","arg2"]
      */
     public static String[] getAttributes(String tag) {
-        String attributes = tag.substring(tag.indexOf('(') + 1, tag.indexOf(')'));
+        String attributes = tag.substring(tag.indexOf('(') + 1, tag.lastIndexOf(')'));
         if (attributes.isEmpty())
             return new String[0];
         return trim(attributes.split(","));
@@ -115,13 +114,14 @@ public class CarpaccioHelper {
         if (view.getTag() != null && view.getTag() instanceof List && actionName!= null) {
             List<CarpaccioAction> actions = (List<CarpaccioAction>) view.getTag();
             List<CarpaccioAction> newActions = new ArrayList<>();
-            for (int i = 0, count = actions.size(); i < count; ++i) {
+
+            for (int i = 0, count = actions.size(); i < count; ++i)
                 if (!actions.get(i).getCompleteCall().equals(actionName))
                     newActions.add(actions.get(i));
-            }
 
             return newActions;
         }
+
         return view.getTag();
     }
 
@@ -150,7 +150,7 @@ public class CarpaccioHelper {
                 }
             }
 
-            Log.v(TAG, "can't find controller with the method " + function+" , controllers="+objects.toString());
+            CarpaccioLogger.v(TAG, "can't find controller with the method " + function + " , controllers=" + objects.toString());
         }
 
         return null;
@@ -187,12 +187,16 @@ public class CarpaccioHelper {
     }
 
     public static Method callMethod(Object object, Method method, String name, View view, Object[] args) {
+
         if (method != null && object != null) {
+
+            CarpaccioLogger.d(TAG, view.getClass().getName() + " call method " + name + " on " + object);
+
             try {
                 method.invoke(object, getArgumentsWithView(view, method.getParameterTypes(), args));
                 return method;
             } catch (Exception e) {
-                Log.e(TAG, object.getClass() + " cannot invoke method " + name);
+                CarpaccioLogger.e(TAG, object.getClass() + " cannot invoke method " + name);
             }
         }
 
@@ -210,14 +214,14 @@ public class CarpaccioHelper {
             method = object.getClass().getMethod(name);
         } catch (Exception e) {
             if (LOG_FAILURES)
-                Log.v(TAG, object.getClass() + " does not contains the method " + name);
+                CarpaccioLogger.v(TAG, object.getClass() + " does not contains the method " + name);
         }
 
         if (method != null) {
             try {
                 return (T) method.invoke(object);
             } catch (Exception e) {
-                Log.e(TAG, object.getClass() + " cannot invoke method " + name);
+                CarpaccioLogger.e(TAG, object.getClass() + " cannot invoke method " + name);
             }
         }
         return null;
@@ -234,14 +238,14 @@ public class CarpaccioHelper {
             method = object.getClass().getMethod(name, getClasses(args));
         } catch (Exception e) {
             if (LOG_FAILURES)
-                Log.v(TAG, object.getClass() + " does not contains the method " + name);
+                CarpaccioLogger.v(TAG, object.getClass() + " does not contains the method " + name);
         }
 
         if (method != null) {
             try {
                 return (T) method.invoke(object, args);
             } catch (Exception e) {
-                Log.e(TAG, object.getClass() + " cannot invoke method " + name);
+                CarpaccioLogger.e(TAG, object.getClass() + " cannot invoke method " + name);
             }
         }
         return null;
@@ -251,7 +255,7 @@ public class CarpaccioHelper {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
-            Log.e(TAG, s + " is not an integer", e);
+            CarpaccioLogger.e(TAG, s + " is not an integer", e);
             return null;
         }
     }
@@ -260,7 +264,7 @@ public class CarpaccioHelper {
         try {
             return Double.parseDouble(s);
         } catch (NumberFormatException e) {
-            Log.e(TAG, s + " is not an double", e);
+            CarpaccioLogger.e(TAG, s + " is not an double", e);
             return null;
         }
     }
@@ -269,7 +273,7 @@ public class CarpaccioHelper {
         try {
             return Long.parseLong(s);
         } catch (NumberFormatException e) {
-            Log.e(TAG, s + " is not a long", e);
+            CarpaccioLogger.e(TAG, s + " is not a long", e);
             return null;
         }
     }
@@ -278,7 +282,7 @@ public class CarpaccioHelper {
         try {
             return Float.parseFloat(s);
         } catch (NumberFormatException e) {
-            Log.e(TAG, s + " is not a long", e);
+            CarpaccioLogger.e(TAG, s + " is not a long", e);
             return null;
         }
     }
@@ -332,10 +336,12 @@ public class CarpaccioHelper {
         return findParentOfClass(view, Carpaccio.class);
     }
 
-    public static void registerToParentCarpaccio(View view) {
+    public static Carpaccio registerToParentCarpaccio(View view) {
         Carpaccio carpaccio = findParentOfClass(view, Carpaccio.class);
         if (carpaccio != null) {
             carpaccio.addCarpaccioView(view);
+            return carpaccio;
         }
+        return null;
     }
 }
